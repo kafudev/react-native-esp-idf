@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
           package="com.rntespidf">
-  <uses-sdk tools:overrideLibrary="com.github.espressif.esp-idf-provisioning-android" />
+  <uses-sdk tools:overrideLibrary="com.espressif.provisioning" />
 </manifest>
