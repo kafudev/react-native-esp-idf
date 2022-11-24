@@ -1,5 +1,12 @@
 
 
+## [0.2.2](https://github.com/kafudev/react-native-esp-idf/compare/v0.2.1...v0.2.2) (2022-11-24)
+
+
+### Bug Fixes
+
+* add overrideLibrary ([c369c81](https://github.com/kafudev/react-native-esp-idf/commit/c369c81bfd84b218a5dd35bf3d7c037c12ed0027))
+
 ## [0.2.1](https://github.com/kafudev/react-native-esp-idf/compare/v0.2.0...v0.2.1) (2022-11-24)
 
 

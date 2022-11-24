@@ -1,6 +1,6 @@
 {
   "name": "@kafudev/react-native-esp-idf",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "ReactNative Provisioning application for ESP-IDF Unified provisioning",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
