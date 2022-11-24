@@ -1,5 +1,12 @@
 
 
+## [0.3.0](https://github.com/kafudev/react-native-esp-idf/compare/v0.2.2...v0.3.0) (2022-11-24)
+
+
+### Features
+
+* rename RNEspIdf ([177307a](https://github.com/kafudev/react-native-esp-idf/commit/177307a868b1aae6fa47043478980f2b332caa44))
+
 ## [0.2.2](https://github.com/kafudev/react-native-esp-idf/compare/v0.2.1...v0.2.2) (2022-11-24)
 
 
