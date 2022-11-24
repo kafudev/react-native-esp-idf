@@ -65,7 +65,7 @@ const devicePrefix = 'PROV_'
 // android example
 const connectToEspDevice = async()=>{
     try{
-        const result = await RNTEspIdf.connectWifiDevice("pop"); //proof of possession
+        const result = await RNEspIdf.connectWifiDevice("pop"); //proof of possession
 
     }
     catch(err){
@@ -81,7 +81,7 @@ const connectToEspDevice = async()=>{
 		let pop = ""
 		let SSID =""
 		let Password=""
-		const result = await RNTEspIdf.connectWifiDevice(SSID,POP,Password)
+		const result = await RNEspIdf.connectWifiDevice(SSID,POP,Password)
 
 	}
 	catch(err){

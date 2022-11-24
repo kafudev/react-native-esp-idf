@@ -142,7 +142,7 @@ dependencies {
 if (isNewArchitectureEnabled()) {
   react {
     jsRootDir = file("../src/")
-    libraryName = "RNTEspIdf"
-    codegenJavaPackageName = "com.rntespidf"
+    libraryName = "RNEspIdf"
+    codegenJavaPackageName = "com.rnespidf"
   }
 }

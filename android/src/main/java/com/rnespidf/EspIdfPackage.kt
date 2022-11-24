@@ -1,4 +1,4 @@
-package com.rntespidf
+package com.rnespidf
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

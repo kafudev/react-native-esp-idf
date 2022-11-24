@@ -1,4 +1,4 @@
-package com.rntespidf
+package com.rnespidf
 
 import android.Manifest
 import android.app.Activity

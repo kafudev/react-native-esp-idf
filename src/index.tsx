@@ -160,11 +160,11 @@ export interface EspEventEmitter extends NativeEventEmitter {
   ): EmitterSubscription;
 }
 
-const { RNTEspIdf } = NativeModules as { RNTEspIdf: EspProvisioning };
+const { RNEspIdf } = NativeModules as { RNEspIdf: EspProvisioning };
 
-const eventEmitter: EspEventEmitter = new NativeEventEmitter(RNTEspIdf as any);
+const eventEmitter: EspEventEmitter = new NativeEventEmitter(RNEspIdf as any);
 
-export default RNTEspIdf;
+export default RNEspIdf;
 
 export type MessageInfo = {
   scanBle: string;
@@ -215,11 +215,11 @@ export function useProvisioning({
   function connectDevice(bleDevice: BleDevice) {
     if (isConnecting.current) return;
     isConnecting.current = true;
-    RNTEspIdf.stopBleScan();
+    RNEspIdf.stopBleScan();
     console.log('Connect to device:', bleDevice, pop);
     setStatus(message.connectDevice);
     currentDevice.current = bleDevice;
-    RNTEspIdf.connectDevice(bleDevice.serviceUuid, pop);
+    RNEspIdf.connectDevice(bleDevice.serviceUuid, pop);
   }
 
   function configWifi(wifi: WifiAP) {
@@ -244,8 +244,8 @@ export function useProvisioning({
     });
     return function () {
       console.log('Cleanup the resource');
-      RNTEspIdf.stopBleScan();
-      RNTEspIdf.disconnectDevice();
+      RNEspIdf.stopBleScan();
+      RNEspIdf.disconnectDevice();
       eventEmitter.removeAllListeners('scanWifi');
     };
   }, []);
@@ -255,11 +255,11 @@ export function useProvisioning({
       console.log(`AppSateChanged: ${nextAppState}`);
       if (nextAppState === 'active') {
         console.log('Start checkPermissions');
-        const result = await RNTEspIdf.checkPermissions();
+        const result = await RNEspIdf.checkPermissions();
         console.log(`checkPermissions result: ${result}`);
         if (result && !isConnecting.current && currentStep === 1) {
           console.log('Start BleScan');
-          RNTEspIdf.startBleScan(devicePrefix);
+          RNEspIdf.startBleScan(devicePrefix);
         }
       }
     }
@@ -272,10 +272,10 @@ export function useProvisioning({
       console.log('Event permission', event);
       if (event.status) {
         if (currentStep === 1 && !isConnecting.current) {
-          RNTEspIdf.startBleScan(devicePrefix);
+          RNEspIdf.startBleScan(devicePrefix);
           setBleDevices([]);
         } else if (currentStep === 2) {
-          RNTEspIdf.startWifiScan();
+          RNEspIdf.startWifiScan();
         }
       } else {
         setStatus(
@@ -318,7 +318,7 @@ export function useProvisioning({
       console.log('Event connection', event);
       switch (event.status) {
         case 1: //connected
-          RNTEspIdf.startWifiScan();
+          RNEspIdf.startWifiScan();
           setCurrentStep(2);
           setLoading(true);
           setStatus(msg.current.scanWifi);
@@ -379,7 +379,7 @@ export function useProvisioning({
 }
 
 function doProvisioning(_wifi: WifiAP | WifiAPWithPwd) {
-  RNTEspIdf.doProvisioning(
+  RNEspIdf.doProvisioning(
     _wifi.ssid,
     'password' in _wifi ? _wifi.password : ''
   );
