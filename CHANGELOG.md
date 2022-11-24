@@ -1,5 +1,7 @@
 
 
+## [0.3.1](https://github.com/kafudev/react-native-esp-idf/compare/v0.3.0...v0.3.1) (2022-11-24)
+
 ## [0.3.0](https://github.com/kafudev/react-native-esp-idf/compare/v0.2.2...v0.3.0) (2022-11-24)
 
 
