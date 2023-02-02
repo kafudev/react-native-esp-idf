@@ -110,6 +110,10 @@ class EspIdfModule(reactContext: ReactApplicationContext) :
     EventBus.getDefault().register(this)
   }
 
+  override fun getName(): String {
+      return "RNEspIdf"
+  }
+
   @ReactMethod
   fun startBleScan(prefix: String?, p: Promise) {
     if (prefix != null) {
@@ -119,10 +123,7 @@ class EspIdfModule(reactContext: ReactApplicationContext) :
       p.resolve(false)
       return
     }
-    if (!isScanning &&
-      reactApplicationContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
-      PackageManager.PERMISSION_GRANTED
-    ) {
+    if (!isScanning && hasBluetoothPermissions()) {
       p.resolve(true)
       isScanning = true
       bluetoothDevices.clear()
@@ -132,10 +133,7 @@ class EspIdfModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun stopBleScan() {
-    if (isScanning &&
-      reactApplicationContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
-      PackageManager.PERMISSION_GRANTED
-    ) {
+    if (isScanning && hasBluetoothPermissions()) {
       provisionManager.stopBleScan()
     }
   }
@@ -150,31 +148,33 @@ class EspIdfModule(reactContext: ReactApplicationContext) :
     if (!bluetoothDevices.containsKey(uuid)) {
       p.reject("NO_DEVICE", "Can't find the device: $uuid.")
     }
-    p.resolve(true)
-    val security =
-      if (pop == null) ESPConstants.SecurityType.SECURITY_0
-      else ESPConstants.SecurityType.SECURITY_1
-    val espDevice =
-      provisionManager.createESPDevice(ESPConstants.TransportType.TRANSPORT_BLE, security)
-    if (pop != null) {
-      espDevice.proofOfPossession = pop
+    try {
+      val security =
+        if (pop == null) ESPConstants.SecurityType.SECURITY_0
+        else ESPConstants.SecurityType.SECURITY_1
+      val espDevice =
+        provisionManager.createESPDevice(ESPConstants.TransportType.TRANSPORT_BLE, security)
+      if (pop != null) {
+        espDevice.proofOfPossession = pop
+      }
+      espDevice.connectBLEDevice(bluetoothDevices[uuid], uuid)
+      Log.d(TAG, "connectBLEDevice end")
+    } catch (e: Exception) {
+      p.reject("CONNECT_FAILED", e.message)
+      return
     }
-    espDevice.connectBLEDevice(bluetoothDevices[uuid], uuid)
+    p.resolve(true)
   }
 
-    override fun getName(): String {
-        return "RNEspIdf"
+  // Example method
+  // See https://reactnative.dev/docs/native-modules-android
+  @ReactMethod
+  fun startWifiScan(p: Promise) {
+    if (!hasConnected(p)) {
+      return
     }
-
-    // Example method
-    // See https://reactnative.dev/docs/native-modules-android
-    @ReactMethod
-    fun startWifiScan(p: Promise) {
-      if (!hasConnected(p)) {
-        return
-      }
-      p.resolve(true)
-      Log.d(TAG, "Start Wi-Fi Scan")
+    Log.d(TAG, "Start Wi-Fi Scan")
+    try {
       provisionManager.espDevice.scanNetworks(
         object : WiFiScanListener {
           override fun onWifiListReceived(wifiList: ArrayList<WiFiAccessPoint>) {
@@ -203,69 +203,86 @@ class EspIdfModule(reactContext: ReactApplicationContext) :
           }
         }
       )
+    } catch (e: Exception) {
+      Log.e(TAG, "onStartWiFiScanFailed")
+      val params = Arguments.createMap()
+      params.putInt("status", WIFI_SCAN_FAILED)
+      params.putString("message", e.toString())
+      sendEvent(EVENT_SCAN_WIFI, params)
     }
+
+    p.resolve(true)
+
+  }
 
   @ReactMethod
   fun doProvisioning(ssidValue: String, passphraseValue: String, p: Promise) {
     if (!hasConnected(p)) {
       return
     }
-    provisionManager.espDevice.provision(
-      ssidValue,
-      passphraseValue,
-      object : ProvisionListener {
-        override fun createSessionFailed(e: Exception) {
-          val params = Arguments.createMap()
-          params.putInt("status", PROV_INIT_FAILED)
-          params.putString("message", e.message)
-          sendEvent(EVENT_PROV, params)
-        }
+    try {
+      provisionManager.espDevice.provision(
+        ssidValue,
+        passphraseValue,
+        object : ProvisionListener {
+          override fun createSessionFailed(e: Exception) {
+            val params = Arguments.createMap()
+            params.putInt("status", PROV_INIT_FAILED)
+            params.putString("message", e.message)
+            sendEvent(EVENT_PROV, params)
+          }
 
-        override fun wifiConfigSent() {
-          // Align to iOS, leave it alone
-        }
+          override fun wifiConfigSent() {
+            // Align to iOS, leave it alone
+          }
 
-        override fun wifiConfigFailed(e: Exception) {
-          val params = Arguments.createMap()
-          params.putInt("status", PROV_CONFIG_FAILED)
-          params.putString("message", e.message)
-          sendEvent(EVENT_PROV, params)
-        }
+          override fun wifiConfigFailed(e: Exception) {
+            val params = Arguments.createMap()
+            params.putInt("status", PROV_CONFIG_FAILED)
+            params.putString("message", e.message)
+            sendEvent(EVENT_PROV, params)
+          }
 
-        override fun wifiConfigApplied() {
-          val params = Arguments.createMap()
-          params.putInt("status", PROV_CONFIG_APPLIED)
-          sendEvent(EVENT_PROV, params)
-        }
+          override fun wifiConfigApplied() {
+            val params = Arguments.createMap()
+            params.putInt("status", PROV_CONFIG_APPLIED)
+            sendEvent(EVENT_PROV, params)
+          }
 
-        override fun wifiConfigApplyFailed(e: Exception) {
-          val params = Arguments.createMap()
-          params.putInt("status", PROV_APPLY_FAILED)
-          params.putString("message", e.message)
-          sendEvent(EVENT_PROV, params)
-        }
+          override fun wifiConfigApplyFailed(e: Exception) {
+            val params = Arguments.createMap()
+            params.putInt("status", PROV_APPLY_FAILED)
+            params.putString("message", e.message)
+            sendEvent(EVENT_PROV, params)
+          }
 
-        override fun provisioningFailedFromDevice(failureReason: ProvisionFailureReason) {
-          val params = Arguments.createMap()
-          params.putInt("status", PROV_FAILED)
-          params.putString("message", failureReason.name)
-          sendEvent(EVENT_PROV, params)
-        }
+          override fun provisioningFailedFromDevice(failureReason: ProvisionFailureReason) {
+            val params = Arguments.createMap()
+            params.putInt("status", PROV_FAILED)
+            params.putString("message", failureReason.name)
+            sendEvent(EVENT_PROV, params)
+          }
 
-        override fun deviceProvisioningSuccess() {
-          val params = Arguments.createMap()
-          params.putInt("status", PROV_COMPLETED)
-          sendEvent(EVENT_PROV, params)
-        }
+          override fun deviceProvisioningSuccess() {
+            val params = Arguments.createMap()
+            params.putInt("status", PROV_COMPLETED)
+            sendEvent(EVENT_PROV, params)
+          }
 
-        override fun onProvisioningFailed(e: Exception) {
-          val params = Arguments.createMap()
-          params.putInt("status", PROV_FAILED)
-          params.putString("message", e.message)
-          sendEvent("provisioning", params)
+          override fun onProvisioningFailed(e: Exception) {
+            val params = Arguments.createMap()
+            params.putInt("status", PROV_FAILED)
+            params.putString("message", e.message)
+            sendEvent(EVENT_PROV, params)
+          }
         }
-      }
-    )
+      )
+    } catch (e: Exception) {
+      val params = Arguments.createMap()
+      params.putInt("status", PROV_FAILED)
+      params.putString("message", e.message)
+      sendEvent(EVENT_PROV, params)
+    }
   }
 
   @ReactMethod
@@ -277,22 +294,24 @@ class EspIdfModule(reactContext: ReactApplicationContext) :
   fun onDeviceEvent(event: DeviceConnectionEvent) {
     val params = Arguments.createMap()
     params.putInt("status", event.eventType.toInt())
+    params.putString("data", event.data.toString() )
     Log.d(TAG, "ON Device Prov Event RECEIVED : " + event.eventType)
     sendEvent(EVENT_CONNECT_DEVICE, params)
   }
 
-    private fun hasConnected(p: Promise): Boolean {
-      return if (provisionManager.espDevice == null) {
-        p.reject("DEVICE_NOT_CONNECTED", "Should connect to the device first.")
-        false
-      } else {
-        true
-      }
+  private fun hasConnected(p: Promise): Boolean {
+    return if (provisionManager.espDevice == null) {
+      p.reject("DEVICE_NOT_CONNECTED", "Should connect to the device first.")
+      false
+    } else {
+      true
     }
+  }
 
-    @ReactMethod
-    fun connectWifiDevice(pop: String?, p: Promise) {
-      p.resolve(true)
+  @ReactMethod
+  fun connectWifiDevice(pop: String?, p: Promise) {
+
+    try {
       val security =
         if (pop == null) ESPConstants.SecurityType.SECURITY_0
         else ESPConstants.SecurityType.SECURITY_1
@@ -304,7 +323,13 @@ class EspIdfModule(reactContext: ReactApplicationContext) :
       }
 
       espDevice.connectWiFiDevice()
+    } catch (e: Exception) {
+      Log.e(TAG, "connectWifiDevice failed:" + e.message)
+      p.reject("CONNECT_FAILED", e.message)
+      return
     }
+    p.resolve(true)
+  }
 
   override fun onRequestPermissionsResult(requestCode:Int, permissions: Array<out String>?, grantResults: IntArray?): Boolean {
     Log.d(TAG,
@@ -358,6 +383,13 @@ class EspIdfModule(reactContext: ReactApplicationContext) :
   private fun hasLocationPermissions(): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       reactApplicationContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
+        PackageManager.PERMISSION_GRANTED
+    } else true
+  }
+
+  private fun hasBluetoothPermissions(): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      reactApplicationContext.checkSelfPermission(Manifest.permission.BLUETOOTH) ==
         PackageManager.PERMISSION_GRANTED
     } else true
   }

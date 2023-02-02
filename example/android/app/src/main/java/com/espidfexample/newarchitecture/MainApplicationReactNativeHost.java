@@ -105,7 +105,7 @@ public class MainApplicationReactNativeHost extends ReactNativeHost {
                 return new FabricJSIModuleProvider(
                     reactApplicationContext,
                     componentFactory,
-                    ReactNativeConfig.DEFAULT_CONFIG,
+                    null,
                     viewManagerRegistry);
               }
             });
