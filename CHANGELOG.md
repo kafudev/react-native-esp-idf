@@ -1,5 +1,12 @@
 
 
+## [0.4.0](https://github.com/kafudev/react-native-esp-idf/compare/v0.3.1...v0.4.0) (2023-02-02)
+
+
+### Features
+
+* add error show ([3c3a356](https://github.com/kafudev/react-native-esp-idf/commit/3c3a356fcdcc2aaf860e5fd9112e34a57994ed2c))
+
 ## [0.3.1](https://github.com/kafudev/react-native-esp-idf/compare/v0.3.0...v0.3.1) (2022-11-24)
 
 ## [0.3.0](https://github.com/kafudev/react-native-esp-idf/compare/v0.2.2...v0.3.0) (2022-11-24)
